@@ -23,7 +23,9 @@ The following data is read from the EasyStart BLE connection:
 | Total Faults | Cumulative fault count |
 | Total Starts | Cumulative compressor start count |
 
-You can read my full blog post about the EasyStart ESPHome integration: 📖 [ESPHome: Micro-Air EasyStart Integration](https://www.derekseaman.com/2026/03/esphome-micro-air-easystart-integration.html)
+## Blog Post
+
+📖 [ESPHome: Micro-Air EasyStart Integration](https://www.derekseaman.com/2026/03/esphome-micro-air-easystart-integration.html)
 
 ## Physical Installation
 
