@@ -25,7 +25,7 @@ The following data is read from the EasyStart BLE connection:
 
 ## Blog Post
 
-📖 [ESPHome: Micro-Air EasyStart Integration](https://www.derekseaman.com/2026/03/esphome-micro-air-easystart-integration.html)
+You can read my full blog post about the EasyStart ESPHome integration: 📖 [ESPHome: Micro-Air EasyStart Integration](https://www.derekseaman.com/2026/03/esphome-micro-air-easystart-integration.html)
 
 ## Physical Installation
 
