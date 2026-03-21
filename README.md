@@ -120,6 +120,24 @@ wifi_password: "Your WiFi Password"
 wifi_captive: "fallback-hotspot-password"
 ```
 
+> **Tip — ESP32-C5 with a dedicated 5 GHz SSID:** If your network uses separate SSIDs for 2.4 GHz and 5 GHz, add dedicated secrets for the 5 GHz network:
+>
+> ```yaml
+> wifi5_ssid: "Your 5GHz WiFi SSID"
+> wifi5_password: "Your 5GHz WiFi Password"
+> ```
+>
+> Then update the `wifi:` section in the C5 YAML to reference them:
+>
+> ```yaml
+> wifi:
+>     ssid: !secret wifi5_ssid
+>     password: !secret wifi5_password
+>     band_mode: 5GHZ
+> ```
+>
+> Set `band_mode: 5GHZ` to force the C5 to connect only on the 5 GHz band (requires ESPHome 2026.3+).
+
 ### 2. Set API and OTA Credentials
 
 Edit the `substitutions:` block at the top of your chosen YAML file and fill in your API encryption key and OTA password. Leave the `easystart_mac` as the placeholder for now — you will discover it automatically in the next step.
