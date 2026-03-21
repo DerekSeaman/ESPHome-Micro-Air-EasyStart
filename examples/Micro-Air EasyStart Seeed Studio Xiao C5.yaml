@@ -48,7 +48,7 @@ wifi:
     fast_connect: true
     enable_on_boot: true
     reboot_timeout: 10min
-    # band: "5GHz"   # uncomment to force 5 GHz only
+    band_mode: AUTO   # AUTO | 2.4GHZ | 5GHZ (ESP32-C5 only, requires ESPHome 2026.3+)
     ap:
         ssid: "${friendly_name} Fallback"
         password: !secret wifi_captive
