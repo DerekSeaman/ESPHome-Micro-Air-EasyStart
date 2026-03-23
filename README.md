@@ -17,7 +17,7 @@ The following data is read from the EasyStart BLE connection:
 | Last Start Peak | Peak inrush current on last startup (A) |
 | Line Frequency | AC line frequency (Hz) |
 | Live Current | Real-time A/C current draw (A) |
-| Live Power | Calculated power usage at 120V (W) |
+| Live Power | Calculated power usage at 240V (W) — see note below |
 | SCPT Delay | Short Cycle Protection Timer delay (s) |
 | Status | Operational status string |
 | Total Faults | Cumulative fault count |
@@ -170,7 +170,7 @@ Once running, the following entities will be available in Home Assistant:
 | Entity | Description |
 |--------|-------------|
 | Live Current | Real-time A/C current draw (A) |
-| Live Power | Calculated power usage at 120V (W) |
+| Live Power | Calculated power usage at 240V (W) — see note below |
 | Energy (Daily) | Cumulative energy consumption today (kWh), resets at midnight |
 | Energy (Total) | Lifetime cumulative energy consumption (kWh), never resets — use this for the HA Energy dashboard |
 | Line Frequency | AC line frequency (Hz) |
@@ -225,7 +225,7 @@ During testing I noticed that the EasyStart changed its broadcasting BLE MAC add
 
 - The ESP32 uses `auto_connect: true` to maintain a persistent BLE connection to the EasyStart. The **Read Status** switch activates automatically on BLE connect and deactivates on disconnect. Live Current and Live Power are zeroed out when the BLE connection drops.
 - The **EasyStart MAC** diagnostic sensor scans for nearby EasyStart units by their BLE advertisement name, allowing you to discover the MAC address without a phone app.
-- Live Power is calculated as `Live Current × 120V`. If you are on a 240V system, adjust the multiplier in the YAML.
+- Live Power is calculated as `Live Current × 240V`, which is the standard voltage for central air conditioning compressors in the US. If your system runs on 120V, adjust the multiplier in the YAML.
 - The EasyStart BLE service UUID is `d973f2e0-b19e-11e2-9e96-0800200c9a66`.
 - Some ESP32 devices have very limited memory, so enabling additional BLE functions like BLE proxy may cause the ESP32 to crash. I suggest dedicating an ESP32 for EasyStart to ensure reliability.
 

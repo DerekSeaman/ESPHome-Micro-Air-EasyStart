@@ -16,6 +16,33 @@ esp32:
 esphome:
     name: ${device_name}
     friendly_name: ${friendly_name}
+    on_boot:
+        priority: -10
+        then:
+            # Initialize sensors to 0 on boot (avoid "Unknown" state)
+            - sensor.template.publish:
+                  id: live_current_sen
+                  state: 0.0
+            - sensor.template.publish:
+                  id: live_power_sen
+                  state: 0.0
+            # Initialize EasyStart MAC from substitution
+            - text_sensor.template.publish:
+                  id: detected_mac
+                  state: "${easystart_mac}"
+            # Restore persisted sensors from flash
+            - sensor.template.publish:
+                  id: total_faults_sen
+                  state: !lambda 'return id(_last_total_faults);'
+            - sensor.template.publish:
+                  id: total_starts_sen
+                  state: !lambda 'return id(_last_total_starts);'
+            - sensor.template.publish:
+                  id: last_start_peak_sen
+                  state: !lambda 'return id(_last_start_peak);'
+            - sensor.template.publish:
+                  id: line_frequency_sen
+                  state: !lambda 'return id(_last_line_frequency);'
 
 logger:
     level: DEBUG
@@ -51,6 +78,7 @@ wifi:
         then:
             - lambda: |-
                 id(_wifi_disconnects_since_boot)++;
+                id(wifi_disconnects_since_boot_sensor).publish_state(id(_wifi_disconnects_since_boot));
 
 captive_portal:
 
@@ -170,16 +198,19 @@ sensor:
     name: "SCPT Delay"
     id: scpt_delay_sen
     unit_of_measurement: "s"
+    accuracy_decimals: 0
 
   - platform: template
     name: "Total Faults"
     state_class: total
     id: total_faults_sen
+    accuracy_decimals: 0
 
   - platform: template
     name: "Total Starts"
     state_class: total
     id: total_starts_sen
+    accuracy_decimals: 0
 
   - platform: template
     name: "Live Power"
@@ -187,17 +218,13 @@ sensor:
     device_class: power
     state_class: measurement
     unit_of_measurement: "W"
-    filters:
-        - median:
-            window_size: 5
-            send_every: 1
-            send_first_at: 1
 
   - platform: total_daily_energy
     name: "Energy (Daily)"
     power_id: live_power_sen
     unit_of_measurement: "kWh"
     accuracy_decimals: 1
+    method: left
     filters:
         - multiply: 0.001
 
@@ -206,6 +233,7 @@ sensor:
     sensor: live_power_sen
     unit_of_measurement: "kWh"
     accuracy_decimals: 1
+    integration_method: left
     time_unit: h
     restore: true
     filters:
@@ -269,11 +297,13 @@ sensor:
                 // Extract and log Line Frequency
                 float line_frequency = 500000.0 / ((data[6] & 0xFF) + ((data[7] & 0xFF) * factor));
                 ESP_LOGD("ble_client", "Line Frequency: %.1f", line_frequency);
+                id(_last_line_frequency) = line_frequency;
                 id(line_frequency_sen).publish_state(line_frequency);
 
                 // Extract and log Last Start Peak
                 float last_start_peak = ((data[8] & 0xFF) + ((data[9] & 0xFF) * factor)) / 10.0;
                 ESP_LOGD("ble_client", "Last Start Peak: %.1f", last_start_peak);
+                id(_last_start_peak) = last_start_peak;
                 id(last_start_peak_sen).publish_state(last_start_peak);
 
                 // Extract and log SCPT Delay
@@ -284,11 +314,13 @@ sensor:
                 // Extract and log Total Faults
                 uint16_t total_faults = (data[12] & 0xFF) + ((data[13] & 0xFF) * 256);
                 ESP_LOGD("ble_client", "Total Faults: %u", total_faults);
+                id(_last_total_faults) = total_faults;
                 id(total_faults_sen).publish_state(total_faults);
 
                 // Extract and log Total Starts
                 uint32_t total_starts = data[14] + (data[15] << 8) + (data[16] << 16) + (data[17] << 24);
                 ESP_LOGD("ble_client", "Total Starts: %u", total_starts);
+                id(_last_total_starts) = total_starts;
                 id(total_starts_sen).publish_state(total_starts);
 
                 // Extract and log Status Text
@@ -337,12 +369,32 @@ switch:
                     id: easystart_read
                     state: OFF
 
-# Globals (since-boot only; not restored)
 globals:
+    # Wi-Fi disconnect counter (since-boot only; not restored)
     - id: _wifi_disconnects_since_boot
       type: int
       restore_value: no
       initial_value: '0'
+    # Total starts counter (persisted across reboots)
+    - id: _last_total_starts
+      type: uint32_t
+      restore_value: yes
+      initial_value: '0'
+    # Total faults counter (persisted across reboots)
+    - id: _last_total_faults
+      type: uint16_t
+      restore_value: yes
+      initial_value: '0'
+    # Last start peak current (persisted across reboots)
+    - id: _last_start_peak
+      type: float
+      restore_value: yes
+      initial_value: '0.0'
+    # Line frequency (persisted across reboots)
+    - id: _last_line_frequency
+      type: float
+      restore_value: yes
+      initial_value: '0.0'
 
 time:
     - platform: sntp
