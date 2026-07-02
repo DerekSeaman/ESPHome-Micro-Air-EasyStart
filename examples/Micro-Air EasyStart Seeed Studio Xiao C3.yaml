@@ -228,6 +228,12 @@ sensor:
     filters:
         - multiply: 0.001
 
+  - platform: template
+    name: "Run Time (Daily)"
+    id: daily_runtime_sen
+    unit_of_measurement: "h"
+    accuracy_decimals: 1
+    icon: "mdi:timer-outline"
   - platform: integration
     name: "Energy (Total)"
     sensor: live_power_sen
@@ -395,6 +401,33 @@ globals:
       type: float
       restore_value: yes
       initial_value: '0.0'
+    # Daily runtime accumulator (seconds, persisted across reboots)
+    - id: _daily_runtime_s
+      type: uint32_t
+      restore_value: yes
+      initial_value: '0'
+    # Day of year tracker for midnight reset
+    - id: _runtime_day
+      type: uint16_t
+      restore_value: yes
+      initial_value: '0'
+
+interval:
+    - interval: 10s
+      then:
+          - lambda: |-
+              auto time = id(sntp_time).now();
+              if (time.is_valid()) {
+                uint16_t today = time.day_of_year;
+                if (today != id(_runtime_day)) {
+                  id(_runtime_day) = today;
+                  id(_daily_runtime_s) = 0;
+                }
+                if (id(live_current_sen).state > 0.1) {
+                  id(_daily_runtime_s) += 10;
+                }
+                id(daily_runtime_sen).publish_state(id(_daily_runtime_s) / 3600.0);
+              }
 
 time:
     - platform: sntp
